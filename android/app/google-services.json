@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "881499263846",
+    "firebase_url": "https://medoptic-85ad0-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "medoptic-85ad0",
+    "storage_bucket": "medoptic-85ad0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:881499263846:android:af7ff2aefdff3f83dcaea7",
+        "android_client_info": {
+          "package_name": "com.example.medoptic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "881499263846-qje1radppglonmt84fkflplscabqjs65.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-8mtVJLGEoVRY-zqqRL6saxwJQgqPRJw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "881499263846-qje1radppglonmt84fkflplscabqjs65.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

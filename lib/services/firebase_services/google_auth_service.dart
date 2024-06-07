@@ -45,10 +45,10 @@ class GoogleAuthService {
           debugPrint("Creating an account");
           final UserCredential userCredential =
               await _auth.signInWithCredential(gCredential);
-          String randomUsername = userCredential.user!.displayName!
-                  .split(' ')[0] +
-              DateTime.now().millisecondsSinceEpoch.toString().substring(5, 10);
-          debugPrint(randomUsername);
+          // String randomUsername = userCredential.user!.displayName!
+          //         .split(' ')[0] +
+          //     DateTime.now().millisecondsSinceEpoch.toString().substring(5, 10);
+          // debugPrint(randomUsername);
           // user = await AuthService().signUpEmail(
           //   email: userCredential.user!.email!,
           //   password: randomPassword,

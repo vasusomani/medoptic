@@ -56,6 +56,8 @@ dependencies:
   animated_text_kit: ^4.2.2
   qr_code_scanner: ^1.0.1
   flutter_tts: ^3.8.5
+  input_quantity: ^2.3.4
+  fluttertoast: ^8.2.6
 
 dev_dependencies:
   flutter_test:

@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 
 import '../../../model/user_model.dart';
-import '../secure_storage.dart';
+import '../local_storage_services/secure_storage.dart';
 
 class HandleLogin {
   final String USER_DATA_KEY = "USER_DATA";

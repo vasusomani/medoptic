@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:medoptic/Constants/colors.dart';
+import 'package:medoptic/model/user_model.dart';
+import 'package:medoptic/services/firebase_services/google_auth_service.dart';
 
+import '../../../../services/firebase_services/phone_auth_service.dart';
 import '../../../components/buttons.dart';
 import '../../../components/textfields.dart';
 
@@ -17,7 +17,32 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   TextEditingController phoneController = TextEditingController();
   TextEditingController otpController = TextEditingController();
+  PhoneAuthService phoneAuthService = PhoneAuthService();
   bool isOTPSent = false;
+
+  // Future<void> googleSignIn() async {
+  //   try{
+  //     UserModel? user = await GoogleAuthService().googleAuth();
+  //   }
+  // }
+
+  Future<void> sendOtp() async {
+    try {
+      await phoneAuthService.phoneAuth(phoneController.text);
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  Future<void> signInWithOTP() async {
+    try {
+      await phoneAuthService.signInWithOTP(otpController.text);
+      Navigator.pushNamed(context, '/home');
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Container(
                   height: double.maxFinite,
                   width: double.maxFinite,
-                  padding: EdgeInsets.fromLTRB(20, 25, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 25, 20, 0),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border.all(
@@ -101,9 +126,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           suffix: TextButton(
                             onPressed: () {
                               setState(() {
-                                isOTPSent = !isOTPSent;
-                                //TODO
-                                //send OTP and start timer
+                                isOTPSent = true;
+                                sendOtp();
                               });
                             },
                             child: Text(
@@ -141,8 +165,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           width: double.maxFinite,
                           child: PrimaryButton(
-                            onPressed: () =>
-                                Navigator.pushNamed(context, '/home'),
+                            onPressed: () {
+                              signInWithOTP();
+                            },
                             text: "Sign In",
                             isContrast: true,
                           ),
@@ -173,14 +198,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 30,
                         ),
                         SocialButton(
                           onPressed: () {},
                           isLogin: true,
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 10,
                         ),
                         SocialButton(

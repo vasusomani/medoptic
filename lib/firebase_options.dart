@@ -50,19 +50,22 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBt0ZmbVDj7C7O60COshSZIvs8i945XOhQ',
-    appId: '1:293343896747:android:42e8c2780d1bb705cc43ee',
-    messagingSenderId: '293343896747',
-    projectId: 'medoptic-422eb',
-    storageBucket: 'medoptic-422eb.appspot.com',
+    apiKey: 'AIzaSyD-8mtVJLGEoVRY-zqqRL6saxwJQgqPRJw',
+    appId: '1:881499263846:android:af7ff2aefdff3f83dcaea7',
+    messagingSenderId: '881499263846',
+    projectId: 'medoptic-85ad0',
+    databaseURL: 'https://medoptic-85ad0-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'medoptic-85ad0.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAbed7i48Yfp5tJda8OPM_0-rlGjUJpT3w',
-    appId: '1:293343896747:ios:a0bfecb13bc4ba61cc43ee',
-    messagingSenderId: '293343896747',
-    projectId: 'medoptic-422eb',
-    storageBucket: 'medoptic-422eb.appspot.com',
+    apiKey: 'AIzaSyAkfh2hU755SUa-IpqPyIWkLSN8zMazNe4',
+    appId: '1:881499263846:ios:1a7d544501b7a5f0dcaea7',
+    messagingSenderId: '881499263846',
+    projectId: 'medoptic-85ad0',
+    databaseURL: 'https://medoptic-85ad0-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'medoptic-85ad0.appspot.com',
+    iosClientId: '881499263846-tnroo4kfpk2e99er9j23ujhos1k0d4ii.apps.googleusercontent.com',
     iosBundleId: 'com.example.medoptic',
   );
 }

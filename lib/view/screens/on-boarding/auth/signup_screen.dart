@@ -106,7 +106,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             color: Colors.grey.shade500,
                           ),
                           suffix: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              setState(() {
+                                isOTPSent = !isOTPSent;
+                                //TODO
+                                //send OTP and start timer
+                              });
+                            },
                             child: Text(
                               isOTPSent ? "Resend OTP" : "Send OTP",
                               style: Theme.of(context)
