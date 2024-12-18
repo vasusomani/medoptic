@@ -5,17 +5,22 @@ import 'package:medoptic/Constants/colors.dart';
 import 'package:medoptic/constants/decorations.dart';
 
 class AuthTextField extends StatelessWidget {
-  const AuthTextField(
-      {super.key,
-      required this.controller,
-      this.suffix,
-      required this.hintText,
-      this.prefixIcon,
-      required this.keyboardType,
-      this.obscureText = false});
+  const AuthTextField({
+    super.key,
+    required this.controller,
+    this.suffix,
+    this.maxLength = 50,
+    required this.hintText,
+    this.prefixIcon,
+    required this.keyboardType,
+    this.obscureText = false,
+    this.validator,
+  });
   final TextEditingController controller;
   final String hintText;
+  final String? Function(String?)? validator;
   final Widget? prefixIcon;
+  final int maxLength;
   final Widget? suffix;
   final bool obscureText;
   final TextInputType keyboardType;
@@ -24,14 +29,18 @@ class AuthTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
+      validator: validator,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       textInputAction: TextInputAction.next,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      maxLength: maxLength,
       cursorColor: CustomColors.contrastColor1,
       decoration: InputDecoration(
         prefixIcon: prefixIcon,
         suffixIcon: suffix,
         hintText: hintText,
+        counterText: "",
         hintStyle: Theme.of(context)
             .textTheme
             .labelLarge
@@ -50,8 +59,8 @@ class AuthTextField extends StatelessWidget {
   }
 }
 
-class PrescriptionTextField extends StatelessWidget {
-  const PrescriptionTextField({
+class MedTagTextField extends StatelessWidget {
+  const MedTagTextField({
     super.key,
     required this.controller,
     this.suffix,
@@ -59,14 +68,18 @@ class PrescriptionTextField extends StatelessWidget {
     this.prefixIcon,
     required this.keyboardType,
     required this.title,
-    required this.focusNode,
+    this.focusNode,
+    this.isRequired = true,
+    this.disabled = false,
   });
   final TextEditingController controller;
-  final FocusNode focusNode;
+  final FocusNode? focusNode;
   final String title;
+  final bool disabled;
   final String hint;
   final Widget? prefixIcon;
   final Widget? suffix;
+  final bool isRequired;
   final TextInputType keyboardType;
 
   @override
@@ -82,12 +95,24 @@ class PrescriptionTextField extends StatelessWidget {
         const SizedBox(height: 5),
         TextFormField(
           focusNode: focusNode,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          enabled: !disabled,
+          style: Theme.of(context)
+              .textTheme
+              .bodyLarge
+              ?.copyWith(color: CustomColors.fontColor1),
           controller: controller,
           onTap: () {
-            focusNode.requestFocus();
+            focusNode?.requestFocus();
+          },
+          validator: (val) {
+            if (isRequired && (val == null || val.isEmpty)) {
+              return "Field is required";
+            }
+            return null;
           },
           onChanged: (val) {
-            focusNode.requestFocus();
+            focusNode?.requestFocus();
             controller.text = val;
           },
           textInputAction: TextInputAction.next,
@@ -109,6 +134,7 @@ class PrescriptionTextField extends StatelessWidget {
             enabledBorder: Decorations().enabledBorder2,
             focusedBorder: Decorations().focusedBorder2,
             errorBorder: Decorations().errorBorder2,
+            disabledBorder: Decorations().enabledBorder2,
             focusedErrorBorder: Decorations().focusedErrorBorder2,
           ),
         ),
@@ -141,7 +167,9 @@ class InputQuantityField extends StatelessWidget {
         SizedBox(width: MediaQuery.sizeOf(context).width * 0.07),
         InputQty(
           maxVal: 20,
-          initVal: 0,
+          initVal: (controller.text.isEmpty || controller.text == "null")
+              ? 0
+              : double.parse(controller.text).toInt(),
           minVal: 0,
           steps: 1,
           validator: (val) {
@@ -237,6 +265,52 @@ class _CheckBoxFieldState extends State<CheckBoxField> {
   }
 }
 
+class RadioButtonField extends StatelessWidget {
+  const RadioButtonField({
+    Key? key,
+    required this.title,
+    required this.controller,
+    required this.value,
+    required this.groupValue,
+    required this.onChanged,
+  }) : super(key: key);
+
+  final String title;
+  final TextEditingController controller;
+  final String value;
+  final ValueNotifier<String> groupValue;
+  final Function(String?) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: groupValue,
+      builder: (context, groupValue, child) {
+        return Row(
+          children: [
+            Radio<String>(
+              value: value,
+              activeColor: CustomColors.primaryColor,
+              groupValue: groupValue,
+              onChanged: (String? newValue) {
+                onChanged(newValue);
+              },
+            ),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: CustomColors.fontColor1,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.07),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class DateField extends StatefulWidget {
   const DateField({
     super.key,
@@ -271,6 +345,7 @@ class _DateFieldState extends State<DateField> {
                 },
                 child: AbsorbPointer(
                   child: TextFormField(
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     controller: widget.controller,
                     style: Theme.of(context)
                         .textTheme
@@ -279,6 +354,12 @@ class _DateFieldState extends State<DateField> {
                     textInputAction: TextInputAction.next,
                     keyboardType: TextInputType.datetime,
                     cursorColor: CustomColors.contrastColor1,
+                    validator: (val) {
+                      if (val == null || val.isEmpty) {
+                        return "Field is required";
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       hintText: "YYYY/MM/DD",
                       hintStyle: Theme.of(context)

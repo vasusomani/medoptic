@@ -1,45 +1,110 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:medoptic/Constants/colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medoptic/model/user_model.dart';
-import 'package:medoptic/services/firebase_services/google_auth_service.dart';
+import 'package:medoptic/services/state_management_services/templates_riverpod.dart';
+import '../../../../Constants/colors.dart';
+import '../../../../model/template_model.dart';
+import '../../../../services/api_services/template_api.dart';
+import '../../../../services/api_services/user_api.dart';
+import '../../../../services/helper_functions/toast_util.dart';
 
 import '../../../../services/firebase_services/phone_auth_service.dart';
+import '../../../../services/state_management_services/user_riverpod.dart';
 import '../../../components/buttons.dart';
 import '../../../components/textfields.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   TextEditingController phoneController = TextEditingController();
   TextEditingController otpController = TextEditingController();
   PhoneAuthService phoneAuthService = PhoneAuthService();
   bool isOTPSent = false;
+  Timer? _timer;
+  int _start = 0;
 
-  // Future<void> googleSignIn() async {
-  //   try{
-  //     UserModel? user = await GoogleAuthService().googleAuth();
-  //   }
-  // }
+  void startTimer() {
+    _start = 30;
+    const oneSec = Duration(seconds: 1);
+    _timer = Timer.periodic(
+      oneSec,
+      (Timer timer) => setState(
+        () {
+          if (_start < 1) {
+            timer.cancel();
+          } else {
+            _start = _start - 1;
+          }
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   Future<void> sendOtp() async {
     try {
       await phoneAuthService.phoneAuth(phoneController.text);
+      startTimer();
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
+    }
+  }
+
+  Future<Map<String, dynamic>?> checkUserExists() async {
+    try {
+      Map<String, dynamic>? responseBody = await UserApi().getUser();
+      return responseBody;
+    } catch (e) {
+      debugPrint(e.toString());
+      return null;
     }
   }
 
   Future<void> signInWithOTP() async {
     try {
-      await phoneAuthService.signInWithOTP(otpController.text);
-      Navigator.pushNamed(context, '/home');
+      if (otpController.text.isNotEmpty &&
+          otpController.text.length == 6 &&
+          phoneController.text.isNotEmpty &&
+          phoneController.text.length == 10) {
+        await phoneAuthService.signInWithOTP(otpController.text);
+        Map<String, dynamic>? responseBody = await checkUserExists();
+        if (responseBody != null) {
+          UserModel user = UserModel.fromJson(responseBody['data']);
+          debugPrint(user.toJson().toString());
+          ref.watch(userProvider.notifier).setUser(user);
+          //Get all templates
+          // List<dynamic>? templatesResponseBody =
+          //     await TemplateApi().getAllTemplates();
+          // if (templatesResponseBody != null) {
+          //   List<Template> templates =
+          //       templatesResponseBody.map((e) => Template.fromJson(e)).toList();
+          //   ref.watch(templatesProvider).addAll(templates);
+          // }
+          if (user.templates != null) {
+            ref.watch(templatesProvider).addAll(user.templates!);
+          }
+          Navigator.pushNamed(context, '/home');
+        } else {
+          ToastWidget.bottomToast(
+              "Mobile number not registered. Please sign up first");
+        }
+      } else {
+        ToastWidget.bottomToast("Please enter a valid OTP");
+      }
     } catch (e) {
-      print(e.toString());
+      debugPrint("signInWIthOTP Error : $e");
     }
   }
 
@@ -109,6 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         AuthTextField(
                           controller: phoneController,
                           hintText: "Phone Number",
+                          maxLength: 10,
                           prefixIcon: Icon(
                             Icons.phone,
                             color: Colors.grey.shade500,
@@ -119,24 +185,42 @@ class _LoginScreenState extends State<LoginScreen> {
                         AuthTextField(
                           controller: otpController,
                           hintText: "OTP for verification",
+                          maxLength: 6,
                           prefixIcon: Icon(
                             Icons.numbers,
                             color: Colors.grey.shade500,
                           ),
                           suffix: TextButton(
-                            onPressed: () {
-                              setState(() {
-                                isOTPSent = true;
-                                sendOtp();
-                              });
-                            },
+                            onPressed: _start == 0
+                                ? () {
+                                    if (phoneController.text.isNotEmpty &&
+                                        phoneController.text.length == 10) {
+                                      sendOtp();
+                                      setState(() {
+                                        isOTPSent = true;
+                                      });
+                                    } else {
+                                      ToastWidget.bottomToast(
+                                          "Enter a valid phone number");
+                                    }
+                                  }
+                                : null,
+                            style: ButtonStyle(
+                              overlayColor: MaterialStateProperty.all(
+                                Colors.transparent,
+                              ),
+                            ),
                             child: Text(
-                              isOTPSent ? "Resend OTP" : "Send OTP",
+                              _start == 0
+                                  ? (isOTPSent ? "Resend OTP" : "Send OTP")
+                                  : '$_start sec',
                               style: Theme.of(context)
                                   .textTheme
                                   .labelSmall
                                   ?.copyWith(
-                                    color: CustomColors.contrastColor1,
+                                    color: (_start == 0)
+                                        ? CustomColors.contrastColor1
+                                        : (Colors.grey.shade700),
                                     fontWeight: FontWeight.bold,
                                   ),
                             ),

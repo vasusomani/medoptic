@@ -1,20 +1,24 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:medoptic/Constants/colors.dart';
+import 'package:medoptic/services/api_services/medTag_api.dart';
+import 'package:medoptic/services/helper_functions/time.dart';
+import 'package:medoptic/services/helper_functions/toast_util.dart';
 import 'package:medoptic/view/components/qr_modal_sheet.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
-class ScannerScreen extends StatefulWidget {
+class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({Key? key}) : super(key: key);
 
   @override
-  State<ScannerScreen> createState() => _ScannerScreenState();
+  ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen> {
+class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   late FlutterTts flutterTts;
   Barcode? result;
@@ -41,20 +45,30 @@ class _ScannerScreenState extends State<ScannerScreen> {
         ),
         backgroundColor: CustomColors.primaryColor,
         automaticallyImplyLeading: false,
-        // actions: [
-        //   IconButton(
-        //     onPressed: () async {
-        //       await openQrModalSheet(context, modalCompleter);
-        //       await modalCompleter.future; // Wait until modal sheet is closed
-        //       isPaused = false;
-        //       modalCompleter = Completer<void>(); // Reset the completer
-        //     },
-        //     icon: const Icon(
-        //       Icons.settings,
-        //       color: Colors.white,
-        //     ),
-        //   ),
-        // ],
+        actions: [
+          IconButton(
+            onPressed: () async {
+              try {
+                await MedTagApi()
+                    .checkMedTag(medTagId: "667c6a1207fc9fd99e1ee6cb");
+              } catch (e) {
+                debugPrint("Caught an error: $e");
+                ToastWidget.bottomToast(e.toString());
+                isPaused = false;
+                return;
+              }
+              await openQrModalSheet(context, modalCompleter, ref,
+                  medTagId: "667c6a1207fc9fd99e1ee6cb");
+              await modalCompleter.future; // Wait until modal sheet is closed
+              isPaused = false;
+              modalCompleter = Completer<void>(); // Reset the completer
+            },
+            icon: const Icon(
+              Icons.settings,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: <Widget>[
@@ -114,15 +128,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
               ],
             ),
           ),
-          // Expanded(
-          //   flex: 1,
-          //   child: Center(
-          //     child: (result != null)
-          //         ? Text(
-          //             'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
-          //         : const Text('Scan a code'),
-          //   ),
-          // )
         ],
       ),
     );
@@ -150,21 +155,43 @@ class _ScannerScreenState extends State<ScannerScreen> {
     );
   }
 
-  void _onQRViewCreated(QRViewController controller) async {
+  Future _onQRViewCreated(QRViewController controller) async {
+    debugPrint("In funciton");
     this.controller = controller;
-    controller.scannedDataStream.listen((scanData) async {
-      if (!isPaused) {
-        setState(() {
-          result = scanData;
+    try {
+      controller.scannedDataStream.listen((scanData) async {
+        if (!isPaused) {
+          setState(() {
+            result = scanData;
+          });
           isPaused = true;
-        });
-        await openQrModalSheet(context, modalCompleter);
-        await modalCompleter.future; // Wait until modal sheet is closed
-        isPaused = false;
-        modalCompleter = Completer<void>(); // Reset the completer
-        isPaused = false;
-      }
-    });
+          if (scanData.code != null && scanData.code!.isNotEmpty) {
+            try {
+              debugPrint("Timer started");
+              await MedTagApi().checkMedTag(medTagId: scanData.code!);
+            } catch (e) {
+              debugPrint("Caught an error: $e");
+              ToastWidget.bottomToast(e.toString());
+              isPaused = false;
+              return;
+            }
+            await openQrModalSheet(context, modalCompleter, ref,
+                medTagId: scanData.code!);
+            await modalCompleter.future; // Wait until modal sheet is closed
+            isPaused = false;
+            modalCompleter = Completer<void>(); // Reset the completer
+            isPaused = false;
+          } else {
+            ToastWidget.bottomToast("MedTag does not exist");
+            isPaused = false;
+            return;
+          }
+        }
+      });
+    } catch (e) {
+      debugPrint("Caught an error: $e");
+      ToastWidget.bottomToast(e.toString());
+    }
   }
 
   @override

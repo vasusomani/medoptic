@@ -26,7 +26,7 @@ class _MainScreenState extends State<MainScreen> {
             _currentIndex = index;
           });
         },
-        children: const [
+        children: [
           ScannerScreen(),
           SavedScreen(),
           ProfileScreen(),
